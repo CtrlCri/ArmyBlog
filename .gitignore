@@ -1,1 +1,10 @@
+### Django ###
+myblog/db.sqlite3
+myblog/myblog/__pycache__/
+blogapp/myblog/__pycache__/
+
+
+
+# Environments
 venv/
+.env
