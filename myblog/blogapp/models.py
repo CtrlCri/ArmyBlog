@@ -1,39 +1,38 @@
 #Django
 from django.db import models
+from django.utils import timezone
+from django.contrib.auth.models import User
 
-class Tag(models.Model):
-    """ django data model tag """
-    
-    name = models.CharField(max_length=100)
 
-    created_at = models.DateTimeField("date created")
-    updated_at = models.DateTimeField("date updated")
+def user_directory_path(instance, filename):
+    return 'blog/{0}/{1}'.format(instance.title, filename)
 
-    class Meta:
-        verbose_name = 'Tag'
-        verbose_name_plural = 'Tags'
-    
-    def __str__(self):
-        return self.name
 
 class Post(models.Model):
-    """ django data model post """
-    
-    title = models.CharField(max_length=200)
-    slug = models.CharField(max_length=200)
-    author = models.CharField(max_length=100)
-    body = models.TextField('content')
-    tag = models.ManyToManyField(
-        Tag,
-        verbose_name = 'tag'
+
+    class PostObjects(models.Manager):
+        def get_queryset(self):
+            return super().get_queryset() .filter(status='published')
+
+    options = (
+        ('draft', 'Draft'),
+        ('published', 'Published'),
     )
 
-    created_at = models.DateTimeField("date published")
-    updated_at = models.DateTimeField("date updated")
+    title = models.CharField(max_length=250)
+    thumbnail = models.ImageField(upload_to=user_directory_path, blank=True, null=True)
+    excerpt = models.TextField(null=True)
+    content = models.TextField()
+    slug = models.SlugField(max_length=250, unique_for_date='published', null=False, unique=True)
+    published = models.DateTimeField(default=timezone.now)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='post_user')
+    
+    status = models.CharField(max_length=10, choices=options, default='draft')
+    objects = models.Manager()  # default manager
+    postobjects = PostObjects()  # custom manager
 
     class Meta:
-        verbose_name = 'Post'
-        verbose_name_plural = 'Posts'
+        ordering = ('-published',)
 
     def __str__(self):
         return self.title
